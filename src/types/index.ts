@@ -73,4 +73,5 @@ export interface SendMessageResult {
   assistantMessage: Message;
   alertLevel: number;
   isBlocked: boolean;
+  generatedTitle?: string;
 }

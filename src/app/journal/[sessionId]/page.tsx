@@ -85,6 +85,7 @@ export default function SessionPage() {
 
       const updatedSession: Session = {
         ...session,
+        title: result.generatedTitle ?? session.title,
         isBlocked: result.isBlocked ? true : session.isBlocked,
         maxAlertLevel: Math.max(session.maxAlertLevel, result.alertLevel),
         updatedAt: new Date().toISOString(),
@@ -92,6 +93,7 @@ export default function SessionPage() {
       };
 
       setSession(updatedSession);
+      if (result.generatedTitle) setTitleDraft(result.generatedTitle);
       emitSessionUpdate(updatedSession);
     } catch (err: unknown) {
       setMessages((prev) => prev.filter((msg) => msg.id !== optimisticId));
