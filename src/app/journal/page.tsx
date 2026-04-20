@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, MessageSquare } from 'lucide-react';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import SessionCard from '@/components/journal/SessionCard';
 import EditSessionTitleModal from '@/components/journal/EditSessionTitleModal';
+import DeleteSessionConfirmModal from '@/components/journal/DeleteSessionConfirmModal';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Alert from '@/components/ui/Alert';
@@ -13,10 +15,13 @@ import { journalApi } from '@/lib/api';
 import type { Session } from '@/types';
 
 export default function JournalPage() {
+  const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [updatingTitle, setUpdatingTitle] = useState(false);
+  const [deletingSession, setDeletingSession] = useState<Session | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [editingSession, setEditingSession] = useState<Session | null>(null);
 
@@ -31,20 +36,33 @@ export default function JournalPage() {
     setCreating(true);
     try {
       const { session } = await journalApi.createSession();
-      setSessions((prev) => [session, ...prev]);
+      router.push(`/journal/${session.id}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al crear sesión');
-    } finally {
       setCreating(false);
     }
   };
 
-  const deleteSession = async (id: string) => {
+  const requestDeleteSession = (id: string) => {
+    const sessionToDelete = sessions.find((session) => session.id === id);
+    if (!sessionToDelete) return;
+
+    setDeletingSession(sessionToDelete);
+  };
+
+  const confirmDeleteSession = async () => {
+    if (!deletingSession) return;
+
+    setDeleting(true);
+    setError('');
     try {
-      await journalApi.deleteSession(id);
-      setSessions((prev) => prev.filter((s) => s.id !== id));
+      await journalApi.deleteSession(deletingSession.id);
+      setSessions((prev) => prev.filter((session) => session.id !== deletingSession.id));
+      setDeletingSession(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al eliminar');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -110,7 +128,7 @@ export default function JournalPage() {
                 <SessionCard
                   key={session.id}
                   session={session}
-                  onDelete={deleteSession}
+                  onDelete={requestDeleteSession}
                   onEdit={setEditingSession}
                 />
               ))}
@@ -127,6 +145,17 @@ export default function JournalPage() {
             setEditingSession(null);
           }}
           onSave={updateSessionTitle}
+        />
+
+        <DeleteSessionConfirmModal
+          open={!!deletingSession}
+          sessionTitle={deletingSession?.title ?? ''}
+          loading={deleting}
+          onClose={() => {
+            if (deleting) return;
+            setDeletingSession(null);
+          }}
+          onConfirm={confirmDeleteSession}
         />
       </div>
     </ProtectedRoute>
