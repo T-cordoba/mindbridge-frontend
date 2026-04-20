@@ -1,7 +1,7 @@
 import { getToken } from './auth';
 import type {
   User, Session, Message, Psychologist,
-  DashboardMetrics, SendMessageResult,
+  DashboardMetrics, SendMessageResult, SessionsPage,
 } from '@/types';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -45,7 +45,8 @@ export const journalApi = {
   createSession: (title?: string) =>
     request<{ session: Session }>('/journal/sessions', { method: 'POST', body: JSON.stringify({ title }) }),
 
-  getSessions: () => request<{ sessions: Session[] }>('/journal/sessions'),
+  getSessions: (page = 1, limit = 10) =>
+    request<SessionsPage>(`/journal/sessions?page=${page}&limit=${limit}`),
 
   getSession: (id: string) => request<{ session: Session; messages: Message[] }>(`/journal/sessions/${id}`),
 

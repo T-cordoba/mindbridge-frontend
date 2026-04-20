@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, MessageSquare } from 'lucide-react';
+import { Plus, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import SessionCard from '@/components/journal/SessionCard';
 import EditSessionTitleModal from '@/components/journal/EditSessionTitleModal';
@@ -14,6 +14,8 @@ import FadeInSection from '@/components/ui/FadeInSection';
 import { journalApi } from '@/lib/api';
 import type { Session } from '@/types';
 
+const PAGE_SIZE = 6;
+
 export default function JournalPage() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -24,13 +26,29 @@ export default function JournalPage() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [editingSession, setEditingSession] = useState<Session | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  const fetchSessions = useCallback(async (targetPage: number) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await journalApi.getSessions(targetPage, PAGE_SIZE);
+      setSessions(data.sessions);
+      setTotalPages(data.totalPages);
+      setTotal(data.total);
+      setPage(data.page);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al cargar sesiones');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    journalApi.getSessions()
-      .then(({ sessions }) => setSessions(sessions))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+    fetchSessions(1);
+  }, [fetchSessions]);
 
   const createSession = async () => {
     setCreating(true);
@@ -44,21 +62,21 @@ export default function JournalPage() {
   };
 
   const requestDeleteSession = (id: string) => {
-    const sessionToDelete = sessions.find((session) => session.id === id);
-    if (!sessionToDelete) return;
-
-    setDeletingSession(sessionToDelete);
+    const sessionToDelete = sessions.find((s) => s.id === id);
+    if (sessionToDelete) setDeletingSession(sessionToDelete);
   };
 
   const confirmDeleteSession = async () => {
     if (!deletingSession) return;
-
     setDeleting(true);
     setError('');
     try {
       await journalApi.deleteSession(deletingSession.id);
-      setSessions((prev) => prev.filter((session) => session.id !== deletingSession.id));
       setDeletingSession(null);
+      const newTotal = total - 1;
+      const newTotalPages = Math.max(1, Math.ceil(newTotal / PAGE_SIZE));
+      const targetPage = page > newTotalPages ? newTotalPages : page;
+      await fetchSessions(targetPage);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al eliminar');
     } finally {
@@ -68,16 +86,11 @@ export default function JournalPage() {
 
   const updateSessionTitle = async (title: string) => {
     if (!editingSession) return;
-
     setUpdatingTitle(true);
     setError('');
     try {
       const { session: updatedSession } = await journalApi.updateSessionTitle(editingSession.id, title);
-      setSessions((prev) =>
-        prev
-          .map((currentSession) => currentSession.id === updatedSession.id ? updatedSession : currentSession)
-          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      );
+      setSessions((prev) => prev.map((s) => s.id === updatedSession.id ? updatedSession : s));
       setEditingSession(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al actualizar el titulo');
@@ -85,6 +98,24 @@ export default function JournalPage() {
       setUpdatingTitle(false);
     }
   };
+
+  const goToPage = (target: number) => {
+    if (target < 1 || target > totalPages || target === page) return;
+    fetchSessions(target);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const pageNumbers = (): (number | '…')[] => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | '…')[] = [1];
+    if (page > 3) pages.push('…');
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+    if (page < totalPages - 2) pages.push('…');
+    pages.push(totalPages);
+    return pages;
+  };
+
+  const isEmpty = !loading && sessions.length === 0 && total === 0;
 
   return (
     <ProtectedRoute>
@@ -106,7 +137,7 @@ export default function JournalPage() {
 
         {loading ? (
           <div className="flex justify-center py-16"><Spinner size="lg" /></div>
-        ) : sessions.length === 0 ? (
+        ) : isEmpty ? (
           <FadeInSection delay={90}>
             <div className="text-center py-16">
               <div className="w-16 h-16 bg-primary-subtle text-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -133,6 +164,54 @@ export default function JournalPage() {
                 />
               ))}
             </div>
+
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-between gap-4">
+                <p className="text-xs text-text-muted">
+                  {total} sesión{total !== 1 ? 'es' : ''} · página {page} de {totalPages}
+                </p>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => goToPage(page - 1)}
+                    disabled={page === 1}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary-subtle transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Página anterior"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+
+                  {pageNumbers().map((p, i) =>
+                    p === '…' ? (
+                      <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-text-muted text-sm">…</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => goToPage(p as number)}
+                        className={[
+                          'w-8 h-8 rounded-lg text-sm font-medium transition-colors',
+                          p === page
+                            ? 'bg-primary text-white'
+                            : 'text-text-secondary hover:text-primary hover:bg-primary-subtle',
+                        ].join(' ')}
+                        aria-current={p === page ? 'page' : undefined}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+
+                  <button
+                    onClick={() => goToPage(page + 1)}
+                    disabled={page === totalPages}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary-subtle transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Página siguiente"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </FadeInSection>
         )}
 
@@ -140,10 +219,7 @@ export default function JournalPage() {
           open={!!editingSession}
           initialTitle={editingSession?.title ?? ''}
           loading={updatingTitle}
-          onClose={() => {
-            if (updatingTitle) return;
-            setEditingSession(null);
-          }}
+          onClose={() => { if (updatingTitle) return; setEditingSession(null); }}
           onSave={updateSessionTitle}
         />
 
@@ -151,10 +227,7 @@ export default function JournalPage() {
           open={!!deletingSession}
           sessionTitle={deletingSession?.title ?? ''}
           loading={deleting}
-          onClose={() => {
-            if (deleting) return;
-            setDeletingSession(null);
-          }}
+          onClose={() => { if (deleting) return; setDeletingSession(null); }}
           onConfirm={confirmDeleteSession}
         />
       </div>

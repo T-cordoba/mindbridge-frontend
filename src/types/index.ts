@@ -68,6 +68,14 @@ export interface DashboardMetrics {
   analyzedMessages: number;
 }
 
+export interface SessionsPage {
+  sessions: Session[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface SendMessageResult {
   userMessage: Message;
   assistantMessage: Message;
