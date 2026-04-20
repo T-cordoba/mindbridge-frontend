@@ -63,7 +63,7 @@ export default function JournalChatShell({ children }: JournalChatShellProps) {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] w-full max-w-[var(--journal-layout-max-width)] mx-auto flex">
+    <div className="h-[calc(100vh-4rem)] w-full flex">
       <RecentSessionsSidebar
         className="hidden lg:flex"
         sessions={recentSessions}
@@ -74,7 +74,7 @@ export default function JournalChatShell({ children }: JournalChatShellProps) {
         onToggleCollapse={() => setCollapsed((prev) => !prev)}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col min-h-0">
         {children}
       </div>
     </div>

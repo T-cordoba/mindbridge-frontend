@@ -154,7 +154,7 @@ export default function SessionPage() {
 
   return (
     <ProtectedRoute>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col min-h-0">
         <FadeInSection>
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-bg border-b border-border">
