@@ -1,0 +1,82 @@
+'use client';
+
+import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { useSelectedLayoutSegment } from 'next/navigation';
+import RecentSessionsSidebar from '@/components/journal/RecentSessionsSidebar';
+import { journalApi } from '@/lib/api';
+import type { Session } from '@/types';
+
+const sortSessionsByActivity = (a: Session, b: Session) =>
+  new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+
+interface SessionUpdatedEventDetail {
+  session: Session;
+}
+
+function isSessionUpdatedEvent(value: unknown): value is CustomEvent<SessionUpdatedEventDetail> {
+  return value instanceof CustomEvent;
+}
+
+interface JournalChatShellProps {
+  children: ReactNode;
+}
+
+export default function JournalChatShell({ children }: JournalChatShellProps) {
+  const segment = useSelectedLayoutSegment();
+  const activeSessionId = useMemo(() => (typeof segment === 'string' ? segment : ''), [segment]);
+  const isSessionRoute = activeSessionId.length > 0;
+
+  const [recentSessions, setRecentSessions] = useState<Session[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [recentError, setRecentError] = useState('');
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (!isSessionRoute) return;
+
+    setRecentLoading(true);
+    setRecentError('');
+
+    journalApi.getSessions()
+      .then(({ sessions }) => setRecentSessions([...sessions].sort(sortSessionsByActivity)))
+      .catch((err) => setRecentError(err instanceof Error ? err.message : 'Error al cargar sesiones recientes'))
+      .finally(() => setRecentLoading(false));
+  }, [isSessionRoute]);
+
+  useEffect(() => {
+    if (!isSessionRoute) return;
+
+    const handleSessionUpdate = (event: Event) => {
+      if (!isSessionUpdatedEvent(event)) return;
+      const updatedSession = event.detail?.session;
+      if (!updatedSession) return;
+
+      setRecentSessions((prev) => [updatedSession, ...prev.filter((item) => item.id !== updatedSession.id)].sort(sortSessionsByActivity));
+    };
+
+    window.addEventListener('journal:session-updated', handleSessionUpdate);
+    return () => window.removeEventListener('journal:session-updated', handleSessionUpdate);
+  }, [isSessionRoute]);
+
+  if (!isSessionRoute) {
+    return <>{children}</>;
+  }
+
+  return (
+    <div className="h-[calc(100vh-64px)] w-full max-w-[var(--journal-layout-max-width)] mx-auto flex">
+      <RecentSessionsSidebar
+        className="hidden lg:flex"
+        sessions={recentSessions}
+        activeSessionId={activeSessionId}
+        loading={recentLoading}
+        error={recentError}
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed((prev) => !prev)}
+      />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        {children}
+      </div>
+    </div>
+  );
+}

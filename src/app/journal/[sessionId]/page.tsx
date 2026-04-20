@@ -15,6 +15,12 @@ import FadeInSection from '@/components/ui/FadeInSection';
 import { journalApi } from '@/lib/api';
 import type { Session, Message } from '@/types';
 
+const emitSessionUpdate = (updatedSession: Session) => {
+  window.dispatchEvent(new CustomEvent('journal:session-updated', {
+    detail: { session: updatedSession },
+  }));
+};
+
 export default function SessionPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [session, setSession] = useState<Session | null>(null);
@@ -29,7 +35,11 @@ export default function SessionPage() {
 
   useEffect(() => {
     journalApi.getSession(sessionId)
-      .then(({ session, messages }) => { setSession(session); setMessages(messages); })
+      .then(({ session, messages }) => {
+        setSession(session);
+        setMessages(messages);
+        emitSessionUpdate(session);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [sessionId]);
@@ -72,9 +82,17 @@ export default function SessionPage() {
         const withoutOptimistic = prev.filter((msg) => msg.id !== optimisticId);
         return [...withoutOptimistic, result.userMessage, result.assistantMessage];
       });
-      if (result.isBlocked) {
-        setSession((prev) => prev ? { ...prev, isBlocked: true } : prev);
-      }
+
+      const updatedSession: Session = {
+        ...session,
+        isBlocked: result.isBlocked ? true : session.isBlocked,
+        maxAlertLevel: Math.max(session.maxAlertLevel, result.alertLevel),
+        updatedAt: new Date().toISOString(),
+        messageCount: session.messageCount + 2,
+      };
+
+      setSession(updatedSession);
+      emitSessionUpdate(updatedSession);
     } catch (err: unknown) {
       setMessages((prev) => prev.filter((msg) => msg.id !== optimisticId));
       setError(err instanceof Error ? err.message : 'Error al enviar');
@@ -110,6 +128,7 @@ export default function SessionPage() {
       const { session: updatedSession } = await journalApi.updateSessionTitle(sessionId, normalizedTitle);
       setSession(updatedSession);
       setTitleDraft(updatedSession.title);
+      emitSessionUpdate(updatedSession);
       setEditingTitle(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al actualizar el titulo');
@@ -130,7 +149,7 @@ export default function SessionPage() {
 
   return (
     <ProtectedRoute>
-      <div className="flex flex-col h-[calc(100vh-64px)]">
+      <div className="flex min-w-0 flex-1 flex-col">
         <FadeInSection>
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-surface border-b border-border">
@@ -189,7 +208,7 @@ export default function SessionPage() {
 
         {/* Messages */}
         <FadeInSection delay={70} className="flex-1 overflow-y-auto chat-scroll px-4 py-6">
-          <div className="w-full max-w-2xl mx-auto">
+          <div className="w-full max-w-[var(--journal-chat-max-width)] mx-auto">
             {loading ? (
               <div className="flex justify-center py-8"><Spinner /></div>
             ) : messages.length === 0 ? (

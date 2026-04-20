@@ -33,6 +33,16 @@
 
   --color-scrollbar: #d1c4e9;
   --color-scrollbar-thumb: #9e7bc4;
+
+  --journal-layout-max-width: 120rem;
+  --journal-sidebar-width: 17rem;
+  --journal-sidebar-collapsed-width: 4.75rem;
+  --journal-chat-max-width: 44rem;
+  --journal-sidebar-item-hover-bg: #f5efff;
+  --journal-sidebar-item-active-bg: #ebe1fb;
+  --journal-sidebar-icon-bg: #ece4fa;
+  --journal-sidebar-icon-active-bg: var(--color-primary);
+  --journal-sidebar-icon-active-fg: #ffffff;
 }
 
 /* ─── Dark mode ─── */
@@ -65,6 +75,16 @@
 
   --color-scrollbar: #2d1f4a;
   --color-scrollbar-thumb: #6b4fa0;
+
+  --journal-layout-max-width: 120rem;
+  --journal-sidebar-width: 17rem;
+  --journal-sidebar-collapsed-width: 4.75rem;
+  --journal-chat-max-width: 44rem;
+  --journal-sidebar-item-hover-bg: #24153a;
+  --journal-sidebar-item-active-bg: #2c1a44;
+  --journal-sidebar-icon-bg: #2b1b43;
+  --journal-sidebar-icon-active-bg: var(--color-primary);
+  --journal-sidebar-icon-active-fg: #ffffff;
 }
 
 /* ─── Base ─── */
