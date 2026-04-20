@@ -10,15 +10,6 @@ const footerLinks = [
 export default function Footer() {
   return (
     <footer className="mt-auto bg-surface border-t border-border">
-      <div className="bg-warning-bg">
-        <div className="container py-3 flex items-center justify-center gap-2 text-warning text-xs text-center">
-          <AlertTriangle size={13} className="flex-shrink-0" />
-          <span>
-            <strong>Aviso importante:</strong> MindBridge es una herramienta de apoyo emocional y{' '}
-            <strong>NO reemplaza</strong> la terapia psicologica profesional.
-          </span>
-        </div>
-      </div>
 
       <div className="container py-8 md:py-9">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -59,6 +50,18 @@ export default function Footer() {
                 </Link>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="my-6 h-px bg-border" />
+
+        <div className="bg-warning-bg">
+          <div className="container py-3 flex items-center justify-center gap-2 text-warning text-xs text-center">
+            <AlertTriangle size={13} className="flex-shrink-0" />
+            <span>
+              <strong>Aviso importante:</strong> MindBridge es una herramienta de apoyo emocional y{' '}
+              <strong>NO reemplaza</strong> la terapia psicologica profesional.
+            </span>
           </div>
         </div>
 
