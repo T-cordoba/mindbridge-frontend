@@ -189,7 +189,7 @@ export default function SessionPage() {
 
         {/* Messages */}
         <FadeInSection delay={70} className="flex-1 overflow-y-auto chat-scroll px-4 py-6">
-          <div>
+          <div className="w-full max-w-2xl mx-auto">
             {loading ? (
               <div className="flex justify-center py-8"><Spinner /></div>
             ) : messages.length === 0 ? (
@@ -198,7 +198,7 @@ export default function SessionPage() {
                 <p className="mt-1 text-xs opacity-60">La IA está aquí para escucharte, no para juzgarte.</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+              <div className="flex flex-col gap-4">
                 {messages.map((msg) => (
                   <ChatMessage key={msg.id} message={msg} />
                 ))}
@@ -214,13 +214,13 @@ export default function SessionPage() {
             )}
 
             {session?.isBlocked && (
-              <div className="max-w-2xl mx-auto mt-6">
+              <div className="mt-6">
                 <CrisisAlert />
               </div>
             )}
 
             {error && (
-              <div className="max-w-2xl mx-auto mt-4">
+              <div className="mt-4">
                 <Alert variant="danger">{error}</Alert>
               </div>
             )}
