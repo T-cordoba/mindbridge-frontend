@@ -1,5 +1,5 @@
 import Spinner from '@/components/ui/Spinner';
-import { PanelLeft, PanelLeftClose } from 'lucide-react';
+import { PanelLeft, PanelLeftClose, Plus } from 'lucide-react';
 import type { Session } from '@/types';
 import RecentSessionItem from './RecentSessionItem';
 
@@ -8,6 +8,8 @@ interface RecentSessionsSidebarProps {
   activeSessionId: string;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  onCreateSession?: () => void;
+  creatingSession?: boolean;
   loading?: boolean;
   error?: string;
   title?: string;
@@ -20,6 +22,8 @@ export default function RecentSessionsSidebar({
   activeSessionId,
   collapsed = false,
   onToggleCollapse,
+  onCreateSession,
+  creatingSession = false,
   loading = false,
   error,
   title = 'Conversaciones recientes',
@@ -50,6 +54,28 @@ export default function RecentSessionsSidebar({
           aria-label={collapsed ? 'Expandir conversaciones recientes' : 'Colapsar conversaciones recientes'}
         >
           {collapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
+        </button>
+      </div>
+
+      <div className={[
+        'pb-3',
+        collapsed ? 'flex justify-center' : 'px-2',
+      ].join(' ')}>
+        <button
+          type="button"
+          onClick={onCreateSession}
+          disabled={creatingSession}
+          className={[
+            'inline-flex items-center justify-center gap-2 rounded-xl border border-border text-sm font-medium',
+            'text-text-secondary hover:text-primary hover:bg-primary-subtle transition-colors',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+            collapsed ? 'w-8 h-8' : 'w-full px-3 py-2',
+          ].join(' ')}
+          aria-label="Crear nueva sesión"
+          title={collapsed ? 'Nueva sesión' : undefined}
+        >
+          <Plus size={16} />
+          {!collapsed && <span>Nueva sesión</span>}
         </button>
       </div>
 

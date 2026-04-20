@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { useSelectedLayoutSegment } from 'next/navigation';
+import { useRouter, useSelectedLayoutSegment } from 'next/navigation';
 import RecentSessionsSidebar from '@/components/journal/RecentSessionsSidebar';
 import { journalApi } from '@/lib/api';
 import type { Session } from '@/types';
@@ -22,6 +22,7 @@ interface JournalChatShellProps {
 }
 
 export default function JournalChatShell({ children }: JournalChatShellProps) {
+  const router = useRouter();
   const segment = useSelectedLayoutSegment();
   const activeSessionId = useMemo(() => (typeof segment === 'string' ? segment : ''), [segment]);
   const isSessionRoute = activeSessionId.length > 0;
@@ -30,6 +31,7 @@ export default function JournalChatShell({ children }: JournalChatShellProps) {
   const [recentLoading, setRecentLoading] = useState(false);
   const [recentError, setRecentError] = useState('');
   const [collapsed, setCollapsed] = useState(false);
+  const [creatingSession, setCreatingSession] = useState(false);
 
   useEffect(() => {
     if (!isSessionRoute) return;
@@ -42,6 +44,22 @@ export default function JournalChatShell({ children }: JournalChatShellProps) {
       .catch((err) => setRecentError(err instanceof Error ? err.message : 'Error al cargar sesiones recientes'))
       .finally(() => setRecentLoading(false));
   }, [isSessionRoute]);
+
+  const handleCreateSession = async () => {
+    if (creatingSession) return;
+
+    setCreatingSession(true);
+    setRecentError('');
+    try {
+      const { session } = await journalApi.createSession();
+      setRecentSessions((prev) => [session, ...prev.filter((item) => item.id !== session.id)].sort(sortSessionsByActivity));
+      router.push(`/journal/${session.id}`);
+    } catch (err: unknown) {
+      setRecentError(err instanceof Error ? err.message : 'Error al crear sesión');
+    } finally {
+      setCreatingSession(false);
+    }
+  };
 
   useEffect(() => {
     if (!isSessionRoute) return;
@@ -72,6 +90,8 @@ export default function JournalChatShell({ children }: JournalChatShellProps) {
         error={recentError}
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((prev) => !prev)}
+        onCreateSession={handleCreateSession}
+        creatingSession={creatingSession}
       />
 
       <div className="flex min-w-0 flex-1 flex-col min-h-0">
