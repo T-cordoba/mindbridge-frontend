@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, AlertTriangle, Pencil } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import ChatMessage from '@/components/journal/ChatMessage';
 import ChatInput from '@/components/journal/ChatInput';
@@ -23,6 +24,8 @@ const emitSessionUpdate = (updatedSession: Session) => {
 
 export default function SessionPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const { user } = useAuth();
+  const userInitial = user ? (user.name?.trim() || user.email)[0].toUpperCase() : 'U';
   const [session, setSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -221,7 +224,7 @@ export default function SessionPage() {
             ) : (
               <div className="flex flex-col gap-4">
                 {messages.map((msg) => (
-                  <ChatMessage key={msg.id} message={msg} />
+                  <ChatMessage key={msg.id} message={msg} userInitial={userInitial} />
                 ))}
                 {sending && (
                   <ChatMessage
