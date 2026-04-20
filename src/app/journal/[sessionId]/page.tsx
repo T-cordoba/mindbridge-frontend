@@ -157,7 +157,7 @@ export default function SessionPage() {
       <div className="flex min-w-0 flex-1 flex-col">
         <FadeInSection>
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-surface border-b border-border">
+          <div className="flex items-center gap-3 px-4 py-3 bg-bg border-b border-border">
             <Link href="/journal" className="p-2 rounded-xl text-text-muted hover:text-primary hover:bg-primary-subtle transition-colors">
               <ArrowLeft size={18} />
             </Link>
@@ -212,7 +212,7 @@ export default function SessionPage() {
         </FadeInSection>
 
         {/* Messages */}
-        <FadeInSection delay={70} className="flex-1 overflow-y-auto chat-scroll px-4 py-6">
+        <FadeInSection delay={70} className="flex-1 overflow-y-auto chat-scroll px-4 py-6 bg-surface">
           <div className="w-full max-w-[var(--journal-chat-max-width)] mx-auto">
             {loading ? (
               <div className="flex justify-center py-8"><Spinner /></div>

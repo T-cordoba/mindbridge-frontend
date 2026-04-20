@@ -40,9 +40,9 @@ export default function ChatInput({ onSend, disabled = false, loading = false }:
   const isNearLimit = remaining < 80;
 
   return (
-    <div className="border-t border-border bg-surface p-4">
+    <div className="border-t border-border bg-bg p-4">
       <div className="max-w-[var(--journal-chat-max-width)] mx-auto w-full">
-        <div className="flex items-center gap-3 bg-surface-elevated rounded-2xl border border-border px-4 py-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+        <div className="flex items-center gap-3 bg-surface rounded-2xl border border-border px-4 py-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
           <textarea
             ref={textareaRef}
             value={value}

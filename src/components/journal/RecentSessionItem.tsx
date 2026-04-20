@@ -33,8 +33,8 @@ export default function RecentSessionItem({
         'block rounded-2xl border transition-colors',
         collapsed ? 'px-2 py-2' : 'px-3 py-3',
         active
-          ? 'border-border-subtle bg-[var(--journal-sidebar-item-active-bg)]'
-          : 'border-transparent hover:bg-[var(--journal-sidebar-item-hover-bg)]',
+          ? 'border-border bg-surface shadow-sm'
+          : 'border-transparent hover:bg-surface',
       ].join(' ')}
     >
       <div className={[
@@ -46,7 +46,7 @@ export default function RecentSessionItem({
             'w-8 h-8 rounded-xl flex items-center justify-center shrink-0',
             active
               ? 'bg-[var(--journal-sidebar-icon-active-bg)] text-[var(--journal-sidebar-icon-active-fg)]'
-              : 'bg-[var(--journal-sidebar-icon-bg)] text-text-muted',
+              : 'bg-primary-subtle text-primary',
           ].join(' ')}
         >
           <MessageCircle size={14} />

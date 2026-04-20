@@ -28,7 +28,7 @@ export default function RecentSessionsSidebar({
 }: RecentSessionsSidebarProps) {
   return (
     <aside className={[
-      'shrink-0 border-r border-border bg-surface py-4 flex-col transition-[width] duration-300',
+      'shrink-0 border-r border-border bg-bg py-4 flex-col transition-[width] duration-300',
       collapsed
         ? 'w-[var(--journal-sidebar-collapsed-width)] px-2'
         : 'w-[var(--journal-sidebar-width)] px-3',
