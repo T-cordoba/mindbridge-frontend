@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, Brain } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import PublicRoute from '@/components/layout/PublicRoute';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Alert from '@/components/ui/Alert';
@@ -33,6 +34,7 @@ export default function LoginPage() {
   };
 
   return (
+    <PublicRoute>
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <FadeInSection>
@@ -85,5 +87,6 @@ export default function LoginPage() {
         </FadeInSection>
       </div>
     </div>
+    </PublicRoute>
   );
 }
