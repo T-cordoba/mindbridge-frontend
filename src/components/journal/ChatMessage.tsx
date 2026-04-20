@@ -10,6 +10,10 @@ interface ChatMessageProps {
 }
 
 export default function ChatMessage({ message, showMood = true, isThinking = false, userInitial = 'U' }: ChatMessageProps) {
+  if (message.role === 'assistant' && message.content.trim().toUpperCase() === 'CRISIS_DETECTED') {
+    return null;
+  }
+
   const isUser = message.role === 'user';
 
   return (

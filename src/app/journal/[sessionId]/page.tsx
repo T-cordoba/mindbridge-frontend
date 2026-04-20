@@ -16,6 +16,14 @@ import FadeInSection from '@/components/ui/FadeInSection';
 import { journalApi } from '@/lib/api';
 import type { Session, Message } from '@/types';
 
+const CRISIS_DETECTED_MARKER = 'CRISIS_DETECTED';
+
+const isCrisisDetectedMessage = (message: Pick<Message, 'role' | 'content'>) =>
+  message.role === 'assistant' && message.content.trim().toUpperCase() === CRISIS_DETECTED_MARKER;
+
+const sanitizeChatMessages = (allMessages: Message[]) =>
+  allMessages.filter((message) => !isCrisisDetectedMessage(message));
+
 const emitSessionUpdate = (updatedSession: Session) => {
   window.dispatchEvent(new CustomEvent('journal:session-updated', {
     detail: { session: updatedSession },
@@ -39,9 +47,15 @@ export default function SessionPage() {
   useEffect(() => {
     journalApi.getSession(sessionId)
       .then(({ session, messages }) => {
-        setSession(session);
-        setMessages(messages);
-        emitSessionUpdate(session);
+        const hasCrisisMarker = messages.some(isCrisisDetectedMessage);
+        const sanitizedMessages = sanitizeChatMessages(messages);
+        const normalizedSession = hasCrisisMarker && !session.isBlocked
+          ? { ...session, isBlocked: true }
+          : session;
+
+        setSession(normalizedSession);
+        setMessages(sanitizedMessages);
+        emitSessionUpdate(normalizedSession);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -81,21 +95,26 @@ export default function SessionPage() {
 
     try {
       const result = await journalApi.sendMessage(sessionId, content);
+      const shouldHideAssistantMessage = isCrisisDetectedMessage(result.assistantMessage);
+
       setMessages((prev) => {
         const withoutOptimistic = prev.filter((msg) => msg.id !== optimisticId);
-        return [...withoutOptimistic, result.userMessage, result.assistantMessage];
+        return shouldHideAssistantMessage
+          ? [...withoutOptimistic, result.userMessage]
+          : [...withoutOptimistic, result.userMessage, result.assistantMessage];
       });
 
       const updatedSession: Session = {
         ...session,
         title: result.generatedTitle ?? session.title,
-        isBlocked: result.isBlocked ? true : session.isBlocked,
+        isBlocked: result.isBlocked || shouldHideAssistantMessage || session.isBlocked,
         maxAlertLevel: Math.max(session.maxAlertLevel, result.alertLevel),
         updatedAt: new Date().toISOString(),
-        messageCount: session.messageCount + 2,
+        messageCount: session.messageCount + (shouldHideAssistantMessage ? 1 : 2),
       };
 
       setSession(updatedSession);
+      if (updatedSession.isBlocked) setEditingTitle(false);
       if (result.generatedTitle) setTitleDraft(result.generatedTitle);
       emitSessionUpdate(updatedSession);
     } catch (err: unknown) {
@@ -187,9 +206,12 @@ export default function SessionPage() {
               ) : (
                 <button
                   type="button"
-                  className="group max-w-full inline-flex items-center gap-1.5 text-left"
+                  className={[
+                    'group max-w-full inline-flex items-center gap-1.5 text-left',
+                    session?.isBlocked ? 'cursor-not-allowed opacity-70' : '',
+                  ].join(' ')}
                   onClick={() => {
-                    if (!session || loading) return;
+                    if (!session || loading || session.isBlocked) return;
                     setTitleDraft(session.title);
                     setEditingTitle(true);
                   }}

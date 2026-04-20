@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Phone, ExternalLink, AlertTriangle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
@@ -15,13 +16,20 @@ export default function CrisisAlert() {
       <div className="flex items-start gap-3 mb-4">
         <AlertTriangle size={24} className="text-crisis flex-shrink-0 mt-0.5" />
         <div>
-          <h2 className="text-lg font-bold text-crisis">Detectamos que podrías necesitar apoyo ahora</h2>
+          <h2 className="text-lg font-bold text-crisis">Conversación bloqueada por seguridad</h2>
           <p className="text-sm text-text-secondary mt-1">
-            El chat ha sido pausado. Por favor, comunícate con una de estas líneas de ayuda inmediata.
-            No estás solo/a.
+            Detectamos señales de crisis y este chat quedó bloqueado de forma inmediata.
+            Busca apoyo ahora mismo. No estás solo/a.
           </p>
         </div>
       </div>
+
+      <Link href="/help" className="block mb-4">
+        <Button variant="danger" size="sm" className="w-full gap-1.5">
+          <ExternalLink size={14} />
+          Buscar ayuda urgente ahora
+        </Button>
+      </Link>
 
       <div className="grid gap-3 mb-5">
         {EMERGENCY_LINES.map((line) => (
@@ -44,12 +52,12 @@ export default function CrisisAlert() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <a href="/help" className="flex-1">
+        <Link href="/help" className="flex-1">
           <Button variant="secondary" size="sm" className="w-full gap-1.5">
             <ExternalLink size={14} />
-            Ver directorio de psicólogos
+            Ver recursos y directorio profesional
           </Button>
-        </a>
+        </Link>
       </div>
     </div>
   );
