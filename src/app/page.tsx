@@ -62,7 +62,7 @@ export default function HomePage() {
 
       <FadeInSection delay={80}>
         {/* Disclaimer */}
-        <section className="py-6 bg-warning-bg border-y border-warning/30">
+        <section className="py-6 bg-warning-bg border-y border-[color:var(--color-warning-border)]">
           <div className="container flex items-center gap-3 justify-center text-sm text-warning max-w-2xl mx-auto text-center">
             <AlertTriangle size={18} className="flex-shrink-0" />
             <p>

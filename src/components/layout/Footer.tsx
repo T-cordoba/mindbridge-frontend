@@ -55,8 +55,8 @@ export default function Footer() {
 
         <div className="my-6 h-px bg-border" />
 
-        <div className="bg-warning-bg">
-          <div className="container py-3 flex items-center justify-center gap-2 text-warning text-xs text-center">
+        <div className="bg-warning-bg border border-[color:var(--color-warning-border)] rounded-xl">
+          <div className="py-3 px-4 md:px-5 flex items-center justify-center gap-2 text-warning text-xs text-center">
             <AlertTriangle size={13} className="flex-shrink-0" />
             <span>
               <strong>Aviso importante:</strong> MindBridge es una herramienta de apoyo emocional y{' '}
