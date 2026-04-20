@@ -1,4 +1,4 @@
-import { Brain, User } from 'lucide-react';
+import { Brain } from 'lucide-react';
 import { getEmotionLabel, getEmotionColor } from '@/lib/emotions';
 import type { Message } from '@/types';
 
@@ -6,20 +6,21 @@ interface ChatMessageProps {
   message: Message;
   showMood?: boolean;
   isThinking?: boolean;
+  userInitial?: string;
 }
 
-export default function ChatMessage({ message, showMood = true, isThinking = false }: ChatMessageProps) {
+export default function ChatMessage({ message, showMood = true, isThinking = false, userInitial = 'U' }: ChatMessageProps) {
   const isUser = message.role === 'user';
 
   return (
     <div className={['flex gap-3 animate-slide-up', isUser ? 'flex-row-reverse' : 'flex-row'].join(' ')}>
       <div
         className={[
-          'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
+          'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm select-none',
           isUser ? 'bg-primary text-white' : 'bg-primary-subtle text-primary',
         ].join(' ')}
       >
-        {isUser ? <User size={16} /> : <Brain size={16} />}
+        {isUser ? userInitial : <Brain size={16} />}
       </div>
 
       <div className={['flex flex-col gap-1.5 max-w-[75%]', isUser ? 'items-end' : 'items-start'].join(' ')}>
