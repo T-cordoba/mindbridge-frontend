@@ -8,40 +8,40 @@
   --color-primary: #8f4be3;
   --color-primary-hover: #6e2cc9;
   --color-primary-light: #b380f0;
-  --color-primary-subtle: #f0e6ff;
-  --color-shadow: rgba(143, 75, 227, 0.15);
+  --color-primary-subtle: #ede5ff;
+  --color-shadow: rgba(143, 75, 227, 0.22);
 
-  --color-bg: #f8f6fc;
+  --color-bg: #f0eaf8;
   --color-surface: #ffffff;
-  --color-surface-elevated: #f0e8fb;
+  --color-surface-elevated: #e8daf5;
 
-  --color-border: #e2d9f3;
-  --color-border-subtle: #f0e8fb;
+  --color-border: #c2add9;
+  --color-border-subtle: #d9cced;
 
-  --color-text-primary: #2d2d2d;
-  --color-text-secondary: #6b6b6b;
-  --color-text-muted: #9ca3af;
+  --color-text-primary: #1c1430;
+  --color-text-secondary: #4a3f6b;
+  --color-text-muted: #6e5f8f;
 
-  --color-danger: #ef4444;
-  --color-danger-bg: #fef2f2;
-  --color-warning: #f59e0b;
-  --color-warning-bg: #fffbeb;
-  --color-warning-border: #f1d7a1;
-  --color-success: #10b981;
-  --color-success-bg: #ecfdf5;
+  --color-danger: #dc2626;
+  --color-danger-bg: #fee2e2;
+  --color-warning: #d97706;
+  --color-warning-bg: #fef3c7;
+  --color-warning-border: #d4a745;
+  --color-success: #059669;
+  --color-success-bg: #d1fae5;
   --color-crisis: #dc2626;
   --color-crisis-bg: #fee2e2;
 
-  --color-scrollbar: #d1c4e9;
-  --color-scrollbar-thumb: #9e7bc4;
+  --color-scrollbar: #c4aee0;
+  --color-scrollbar-thumb: #8b6db8;
 
   --journal-layout-max-width: 120rem;
   --journal-sidebar-width: 17rem;
   --journal-sidebar-collapsed-width: 4.75rem;
   --journal-chat-max-width: 44rem;
-  --journal-sidebar-item-hover-bg: #f5efff;
-  --journal-sidebar-item-active-bg: #ebe1fb;
-  --journal-sidebar-icon-bg: #ece4fa;
+  --journal-sidebar-item-hover-bg: #e9dffa;
+  --journal-sidebar-item-active-bg: #ddd3f5;
+  --journal-sidebar-icon-bg: #e2d5f5;
   --journal-sidebar-icon-active-bg: var(--color-primary);
   --journal-sidebar-icon-active-fg: #ffffff;
 }
