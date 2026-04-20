@@ -36,7 +36,11 @@ export default function SessionCard({ session, onDelete, onEdit }: SessionCardPr
                 </p>
               </div>
             </div>
-            {alertBadge}
+            {alertBadge && (
+              <div className="group-hover:opacity-0 transition-opacity flex-shrink-0">
+                {alertBadge}
+              </div>
+            )}
           </div>
         </Card>
       </Link>
