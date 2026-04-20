@@ -42,6 +42,7 @@ export default function EmotionChart({ data }: EmotionChartProps) {
           tickLine={false}
         />
         <Tooltip
+          cursor={{ fill: 'var(--color-surface-elevated)', opacity: 0.5, radius: 8 }}
           contentStyle={{
             background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
@@ -49,12 +50,23 @@ export default function EmotionChart({ data }: EmotionChartProps) {
             fontSize: 12,
             color: 'var(--color-text-primary)',
           }}
+          labelStyle={{ color: 'var(--color-text-primary)', fontWeight: 600, marginBottom: 2 }}
+          itemStyle={{ color: 'var(--color-text-secondary)' }}
           formatter={(value: number, _: string, props: { payload: { intensity: number } }) => [
             `${value} veces · Intensidad ${props.payload.intensity}`,
             'Frecuencia',
           ]}
         />
-        <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+        <Bar
+          dataKey="value"
+          radius={[8, 8, 0, 0]}
+          activeBar={(props: Record<string, unknown>) => {
+            const { x, y, width, height, fill } = props as {
+              x: number; y: number; width: number; height: number; fill: string;
+            };
+            return <rect x={x} y={y} width={width} height={height} fill={fill} fillOpacity={0.75} rx={8} ry={8} />;
+          }}
+        >
           {chartData.map((entry) => (
             <Cell key={entry.emotion} fill={entry.color} />
           ))}
