@@ -100,7 +100,7 @@ export default function DashboardPage() {
             </FadeInSection>
 
             {metrics.emotions.length > 0 && (
-              <FadeInSection delay={170}>
+              <FadeInSection delay={170} threshold={0.05} rootMargin="0px 0px 18% 0px">
                 <Card>
                   <h2 className="font-semibold mb-4">Detalle de emociones</h2>
                   <div className="flex flex-col gap-3">

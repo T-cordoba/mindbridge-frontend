@@ -9,6 +9,7 @@ interface FadeInSectionProps {
   duration?: number;
   yOffset?: number;
   threshold?: number;
+  rootMargin?: string;
   once?: boolean;
 }
 
@@ -19,6 +20,7 @@ export default function FadeInSection({
   duration = 380,
   yOffset = 10,
   threshold = 0.14,
+  rootMargin = '0px 0px -8% 0px',
   once = true,
 }: FadeInSectionProps) {
   const elementRef = useRef<HTMLDivElement>(null);
@@ -71,13 +73,13 @@ export default function FadeInSection({
       },
       {
         threshold,
-        rootMargin: '0px 0px -8% 0px',
+        rootMargin,
       }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [once, threshold, reducedMotion]);
+  }, [once, threshold, rootMargin, reducedMotion]);
 
   const animatedStyle = reducedMotion
     ? undefined
