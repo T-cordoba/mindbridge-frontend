@@ -52,15 +52,15 @@ export default function EmotionChart({ data }: EmotionChartProps) {
           }}
           labelStyle={{ color: 'var(--color-text-primary)', fontWeight: 600, marginBottom: 2 }}
           itemStyle={{ color: 'var(--color-text-secondary)' }}
-          formatter={(value: number, _: string, props: { payload: { intensity: number } }) => [
-            `${value} veces · Intensidad ${props.payload.intensity}`,
+          formatter={(value: number, _: string, props: any) => [
+            `${value} veces · Intensidad ${props?.payload?.intensity ?? 0}`,
             'Frecuencia',
           ]}
         />
         <Bar
           dataKey="value"
           radius={[8, 8, 0, 0]}
-          activeBar={(props: Record<string, unknown>) => {
+          activeBar={(props: any) => {
             const { x, y, width, height, fill } = props as {
               x: number; y: number; width: number; height: number; fill: string;
             };

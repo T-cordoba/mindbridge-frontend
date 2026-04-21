@@ -42,13 +42,9 @@ export default function FadeInSection({
       media.addListener(syncPreference);
     }
 
-    return () => {
-      if (media.addEventListener) {
-        media.removeEventListener('change', syncPreference);
-      } else {
-        media.removeListener(syncPreference);
-      }
-    };
+   return () => {
+    media.removeEventListener('change', syncPreference);
+  }; 
   }, []);
 
   useEffect(() => {
