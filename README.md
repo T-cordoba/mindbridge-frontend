@@ -40,23 +40,33 @@ A diferencia de un chat genérico, MindBridge actúa como un espejo: devuelve al
 **Frontend (este repositorio)**
 
 - Next.js 15, App Router, TypeScript
-- Tailwind CSS con design system por variables CSS (sin clases de paleta hardcodeadas)
+- React 19
+- Tailwind CSS v3 con design system por variables CSS (sin clases de paleta hardcodeadas)
 - Lucide React para iconografía
 - Recharts para el dashboard
 
 **Backend** — [mindbridge-backend](https://github.com/T-cordoba/mindbridge-backend)
 
-- Node.js + Express (CommonJS)
-- PostgreSQL via `pg`
+- Node.js 20 + Express 4 (CommonJS)
+- PostgreSQL 16 via `pg` 8
 - JWT — sin sesión, sin refresh token
 - Together AI — modelo `openai/gpt-oss-20b` vía API
 - Clean Architecture: `domain` → `application` → `infrastructure` → `interfaces`
 
 ---
 
+## Imágenes en Docker Hub
+
+| Servicio | Imagen |
+|----------|--------|
+| Backend | [`tcordoba24/mindbridge-backend`](https://hub.docker.com/r/tcordoba24/mindbridge-backend) |
+| Frontend | [`tcordoba24/mindbridge-frontend`](https://hub.docker.com/r/tcordoba24/mindbridge-frontend) |
+
+---
+
 ## Ejecución
 
-La ejecución completa de la aplicación (base de datos, backend y frontend) se gestiona desde el repositorio del backend mediante Docker Compose. Consulta la guía completa en [mindbridge-backend](https://github.com/T-cordoba/mindbridge-backend).
+La ejecución completa de la aplicación (base de datos, backend y frontend) se gestiona desde el repositorio del backend mediante Docker Compose, usando las imágenes publicadas en Docker Hub. Consulta la guía completa en [mindbridge-backend](https://github.com/T-cordoba/mindbridge-backend).
 
 ---
 
