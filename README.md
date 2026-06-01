@@ -26,8 +26,8 @@ A diferencia de un chat genérico, MindBridge actúa como un espejo: devuelve al
 
 | Módulo | Descripción |
 |--------|-------------|
-| **Diario con IA** | Chat reflexivo entrenado para hacer preguntas que profundizan la introspección, sin dar consejos clínicos. Genera un título automático para cada sesión. |
-| **Retrato emocional** | Cada respuesta de la IA actualiza un estado emocional acumulativo (no por mensaje individual), con inercia para reflejar la evolución real del estado de ánimo. |
+| **Diario con IA** | Chat reflexivo con streaming en tiempo real (Kimi K2.6 + reasoning nativo). Hace preguntas que profundizan la introspección, sin dar consejos clínicos. Genera un título automático para cada sesión. |
+| **Retrato emocional** | Cada respuesta de la IA actualiza un estado emocional acumulativo (no por mensaje individual), con inercia matemática (±2 máx. por intercambio) para reflejar la evolución real del estado de ánimo. |
 | **Dashboard emocional** | Visualización de emociones promedio, frecuencia y tendencia de alertas en los últimos 30 días. |
 | **Protocolo de crisis** | Detección automática de riesgo (escala 0–5). En nivel 5, el chat se bloquea y se despliega un aviso de crisis con recursos de ayuda. En niveles 3–4, la IA incluye recordatorios de que es una IA y guía al usuario a la Red de Apoyo. |
 | **Red de apoyo** | Directorio de psicólogos para conectar al usuario con profesionales cuando lo necesita. |
@@ -50,7 +50,7 @@ A diferencia de un chat genérico, MindBridge actúa como un espejo: devuelve al
 - Node.js 20 + Express 4 (CommonJS)
 - PostgreSQL 16 via `pg` 8
 - JWT — sin sesión, sin refresh token
-- Together AI — modelo `openai/gpt-oss-20b` vía API
+- NVIDIA NIM — modelo `moonshotai/kimi-k2.6` (Kimi K2.6, 1T params / 32B activos, MoE) con streaming nativo y reasoning
 - Clean Architecture: `domain` → `application` → `infrastructure` → `interfaces`
 
 ---
