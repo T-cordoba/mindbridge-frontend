@@ -62,6 +62,77 @@ export const journalApi = {
       body: JSON.stringify({ content }),
     }),
 
+  sendMessageStream: (
+    sessionId: string,
+    content: string,
+    callbacks: {
+      onReasoning?: (chunk: string) => void;
+      onText: (chunk: string) => void;
+      onDone: (result: SendMessageResult) => void;
+      onError: (message: string) => void;
+    },
+  ): AbortController => {
+    const controller = new AbortController();
+    const token = getToken();
+
+    fetch(`${BASE}/journal/sessions/${sessionId}/messages/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ content }),
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          callbacks.onError((body as { error?: string }).error || `HTTP ${res.status}`);
+          return;
+        }
+
+        const reader = res.body!.getReader();
+        const decoder = new TextDecoder();
+        let sseBuffer = '';
+        let currentEvent = '';
+        let currentData = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          sseBuffer += decoder.decode(value, { stream: true });
+          const lines = sseBuffer.split('\n');
+          sseBuffer = lines.pop() ?? '';
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              currentEvent = line.slice(7).trim();
+            } else if (line.startsWith('data: ')) {
+              currentData = line.slice(6);
+            } else if (line === '') {
+              if (currentData) {
+                try {
+                  const data = JSON.parse(currentData) as Record<string, unknown>;
+                  if (currentEvent === 'reasoning') callbacks.onReasoning?.(data.chunk as string);
+                  else if (currentEvent === 'text') callbacks.onText(data.chunk as string);
+                  else if (currentEvent === 'done') callbacks.onDone(data as unknown as SendMessageResult);
+                  else if (currentEvent === 'error') callbacks.onError(data.message as string);
+                } catch { /* malformed event */ }
+              }
+              currentEvent = '';
+              currentData = '';
+            }
+          }
+        }
+      })
+      .catch((err: Error) => {
+        if (err.name !== 'AbortError') callbacks.onError(err.message);
+      });
+
+    return controller;
+  },
+
   deleteSession: (id: string) => request<void>(`/journal/sessions/${id}`, { method: 'DELETE' }),
 };
 

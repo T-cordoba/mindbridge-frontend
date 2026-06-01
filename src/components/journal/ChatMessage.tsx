@@ -7,9 +7,10 @@ interface ChatMessageProps {
   showMood?: boolean;
   isThinking?: boolean;
   userInitial?: string;
+  streamingContent?: string;
 }
 
-export default function ChatMessage({ message, showMood = true, isThinking = false, userInitial = 'U' }: ChatMessageProps) {
+export default function ChatMessage({ message, showMood = true, isThinking = false, userInitial = 'U', streamingContent }: ChatMessageProps) {
   if (message.role === 'assistant' && message.content.trim().toUpperCase() === 'CRISIS_DETECTED') {
     return null;
   }
@@ -36,12 +37,17 @@ export default function ChatMessage({ message, showMood = true, isThinking = fal
               : 'bg-surface border border-border text-text-primary rounded-tl-sm',
           ].join(' ')}
         >
-          {isThinking ? (
+          {isThinking && !streamingContent ? (
             <div className="inline-flex items-center gap-1" aria-live="polite" aria-label="Asistente pensando">
               <span className="w-1.5 h-1.5 rounded-full bg-text-muted animate-pulse" style={{ animationDelay: '0ms' }} />
               <span className="w-1.5 h-1.5 rounded-full bg-text-muted animate-pulse" style={{ animationDelay: '180ms' }} />
               <span className="w-1.5 h-1.5 rounded-full bg-text-muted animate-pulse" style={{ animationDelay: '360ms' }} />
             </div>
+          ) : streamingContent !== undefined ? (
+            <span>
+              {streamingContent}
+              <span className="animate-pulse opacity-70">▌</span>
+            </span>
           ) : (
             message.content
           )}

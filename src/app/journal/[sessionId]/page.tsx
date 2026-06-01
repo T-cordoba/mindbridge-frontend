@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, AlertTriangle, Pencil } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Pencil, BrainCircuit } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
@@ -38,6 +38,9 @@ export default function SessionPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const [streamingReasoning, setStreamingReasoning] = useState('');
+  const [showReasoning, setShowReasoning] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [updatingTitle, setUpdatingTitle] = useState(false);
@@ -76,7 +79,7 @@ export default function SessionPage() {
     });
   }, [messages, sending]);
 
-  const handleSend = async (content: string) => {
+  const handleSend = (content: string) => {
     if (!session || session.isBlocked) return;
     const optimisticId = `temp-user-${Date.now()}`;
     const optimisticUserMessage: Message = {
@@ -91,38 +94,45 @@ export default function SessionPage() {
 
     setMessages((prev) => [...prev, optimisticUserMessage]);
     setSending(true);
+    setStreamingContent('');
+    setStreamingReasoning('');
     setError('');
 
-    try {
-      const result = await journalApi.sendMessage(sessionId, content);
-      const shouldHideAssistantMessage = isCrisisDetectedMessage(result.assistantMessage);
-
-      setMessages((prev) => {
-        const withoutOptimistic = prev.filter((msg) => msg.id !== optimisticId);
-        return shouldHideAssistantMessage
-          ? [...withoutOptimistic, result.userMessage]
-          : [...withoutOptimistic, result.userMessage, result.assistantMessage];
-      });
-
-      const updatedSession: Session = {
-        ...session,
-        title: result.generatedTitle ?? session.title,
-        isBlocked: result.isBlocked || shouldHideAssistantMessage || session.isBlocked,
-        maxAlertLevel: Math.max(session.maxAlertLevel, result.alertLevel),
-        updatedAt: new Date().toISOString(),
-        messageCount: session.messageCount + (shouldHideAssistantMessage ? 1 : 2),
-      };
-
-      setSession(updatedSession);
-      if (updatedSession.isBlocked) setEditingTitle(false);
-      if (result.generatedTitle) setTitleDraft(result.generatedTitle);
-      emitSessionUpdate(updatedSession);
-    } catch (err: unknown) {
-      setMessages((prev) => prev.filter((msg) => msg.id !== optimisticId));
-      setError(err instanceof Error ? err.message : 'Error al enviar');
-    } finally {
-      setSending(false);
-    }
+    journalApi.sendMessageStream(sessionId, content, {
+      onReasoning: (chunk) => setStreamingReasoning((prev) => prev + chunk),
+      onText: (chunk) => setStreamingContent((prev) => prev + chunk),
+      onDone: (result) => {
+        const shouldHide = isCrisisDetectedMessage(result.assistantMessage);
+        setMessages((prev) => {
+          const withoutOptimistic = prev.filter((msg) => msg.id !== optimisticId);
+          return shouldHide
+            ? [...withoutOptimistic, result.userMessage]
+            : [...withoutOptimistic, result.userMessage, result.assistantMessage];
+        });
+        const updatedSession: Session = {
+          ...session,
+          title: result.generatedTitle ?? session.title,
+          isBlocked: result.isBlocked || shouldHide || session.isBlocked,
+          maxAlertLevel: Math.max(session.maxAlertLevel, result.alertLevel),
+          updatedAt: new Date().toISOString(),
+          messageCount: session.messageCount + (shouldHide ? 1 : 2),
+        };
+        setSession(updatedSession);
+        if (updatedSession.isBlocked) setEditingTitle(false);
+        if (result.generatedTitle) setTitleDraft(result.generatedTitle);
+        emitSessionUpdate(updatedSession);
+        setSending(false);
+        setStreamingContent('');
+        setStreamingReasoning('');
+      },
+      onError: (message) => {
+        setMessages((prev) => prev.filter((msg) => msg.id !== optimisticId));
+        setError(message);
+        setSending(false);
+        setStreamingContent('');
+        setStreamingReasoning('');
+      },
+    });
   };
 
   const handleTitleSave = async () => {
@@ -230,6 +240,19 @@ export default function SessionPage() {
                 Nivel {session?.maxAlertLevel ?? 0}
               </div>
             )}
+            <button
+              type="button"
+              title="Ver razonamiento de la IA"
+              onClick={() => setShowReasoning((v) => !v)}
+              className={[
+                'p-1.5 rounded-lg transition-colors text-xs flex items-center gap-1',
+                showReasoning
+                  ? 'bg-primary-subtle text-primary'
+                  : 'text-text-muted hover:text-primary hover:bg-primary-subtle',
+              ].join(' ')}
+            >
+              <BrainCircuit size={15} />
+            </button>
           </div>
         </FadeInSection>
 
@@ -249,12 +272,26 @@ export default function SessionPage() {
                   <ChatMessage key={msg.id} message={msg} userInitial={userInitial} />
                 ))}
                 {sending && (
-                  <ChatMessage
-                    key={thinkingMessage.id}
-                    message={thinkingMessage}
-                    showMood={false}
-                    isThinking
-                  />
+                  <>
+                    {showReasoning && (
+                      <div className="rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text-muted max-h-40 overflow-y-auto">
+                        <div className="flex items-center gap-1.5 mb-1.5 font-medium text-primary">
+                          <BrainCircuit size={13} />
+                          Razonamiento interno
+                        </div>
+                        <p className="leading-relaxed whitespace-pre-wrap break-words">
+                          {streamingReasoning || <span className="animate-pulse">Esperando razonamiento...</span>}
+                        </p>
+                      </div>
+                    )}
+                    <ChatMessage
+                      key={thinkingMessage.id}
+                      message={thinkingMessage}
+                      showMood={false}
+                      isThinking={!streamingContent}
+                      streamingContent={streamingContent || undefined}
+                    />
+                  </>
                 )}
               </div>
             )}
