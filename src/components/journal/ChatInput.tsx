@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, KeyboardEvent, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 
-const MAX_LENGTH = 600;
+const MAX_LENGTH = 4000;
 
 interface ChatInputProps {
   onSend: (content: string) => void;
+  onCancel?: () => void;
   disabled?: boolean;
   loading?: boolean;
 }
 
-export default function ChatInput({ onSend, disabled = false, loading = false }: ChatInputProps) {
+export default function ChatInput({ onSend, onCancel, disabled = false, loading = false }: ChatInputProps) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -37,7 +38,7 @@ export default function ChatInput({ onSend, disabled = false, loading = false }:
   };
 
   const remaining = MAX_LENGTH - value.length;
-  const isNearLimit = remaining < 80;
+  const isNearLimit = remaining < 200;
 
   return (
     <div className="border-t border-border bg-bg p-4">
@@ -55,23 +56,29 @@ export default function ChatInput({ onSend, disabled = false, loading = false }:
           />
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            {isNearLimit && (
+            {isNearLimit && !loading && (
               <span className={['text-xs', remaining < 20 ? 'text-danger' : 'text-text-muted'].join(' ')}>
                 {remaining}
               </span>
             )}
-            <button
-              onClick={handleSend}
-              disabled={!value.trim() || disabled || loading}
-              className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:outline-offset-0"
-              aria-label="Enviar mensaje"
-            >
-              {loading ? (
-                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
+            {loading && onCancel ? (
+              <button
+                onClick={onCancel}
+                className="w-8 h-8 rounded-xl bg-surface-elevated border border-border text-text-muted flex items-center justify-center hover:text-danger hover:border-danger transition-colors focus-visible:outline-none focus-visible:outline-offset-0"
+                aria-label="Cancelar respuesta"
+              >
+                <Square size={13} fill="currentColor" />
+              </button>
+            ) : (
+              <button
+                onClick={handleSend}
+                disabled={!value.trim() || disabled || loading}
+                className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:outline-offset-0"
+                aria-label="Enviar mensaje"
+              >
                 <Send size={14} />
-              )}
-            </button>
+              </button>
+            )}
           </div>
         </div>
         <p className="text-xs text-text-muted mt-1.5 text-center">

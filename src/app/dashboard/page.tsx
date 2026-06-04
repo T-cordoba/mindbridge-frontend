@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BarChart2, MessageSquare, AlertTriangle, TrendingUp } from 'lucide-react';
+import { BarChart2, MessageSquare, AlertTriangle, TrendingUp, Heart } from 'lucide-react';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import StatsCard from '@/components/dashboard/StatsCard';
 import EmotionChart from '@/components/dashboard/EmotionChart';
 import MoodTimeline from '@/components/dashboard/MoodTimeline';
+import WellbeingChart from '@/components/dashboard/WellbeingChart';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import Spinner from '@/components/ui/Spinner';
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   }, [days]);
 
   const topEmotion = metrics?.emotions[0];
+  const latestWellbeing = metrics?.wellbeingTrend.at(-1)?.score ?? null;
 
   return (
     <ProtectedRoute>
@@ -76,12 +78,11 @@ export default function DashboardPage() {
                   sub={topEmotion ? `${topEmotion.occurrences} veces` : undefined}
                 />
                 <StatsCard
-                  label="Nivel de alerta máx."
-                  value={metrics.alertTrend.length > 0
-                    ? Math.max(...metrics.alertTrend.map((a) => a.maxAlert))
-                    : 0}
-                  icon={<AlertTriangle size={22} />}
-                  color={metrics.alertTrend.some((a) => a.maxAlert >= 4) ? 'text-danger' : 'text-primary'}
+                  label="Bienestar reciente"
+                  value={latestWellbeing !== null ? `${latestWellbeing > 0 ? '+' : ''}${latestWellbeing}` : '—'}
+                  icon={<Heart size={22} />}
+                  color={latestWellbeing !== null && latestWellbeing >= 0 ? 'text-primary' : 'text-danger'}
+                  sub="positivo vs negativo"
                 />
               </div>
             </FadeInSection>
@@ -98,6 +99,21 @@ export default function DashboardPage() {
                 </Card>
               </div>
             </FadeInSection>
+
+            {metrics.wellbeingTrend.length > 0 && (
+              <FadeInSection delay={160}>
+                <Card className="mb-8">
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="font-semibold">Tendencia de bienestar</h2>
+                    <span className="text-xs text-text-muted">emociones positivas − negativas</span>
+                  </div>
+                  <p className="text-xs text-text-muted mb-4">
+                    Por encima de 0 indica predominancia de emociones positivas; por debajo, emociones difíciles.
+                  </p>
+                  <WellbeingChart data={metrics.wellbeingTrend} />
+                </Card>
+              </FadeInSection>
+            )}
 
             {metrics.emotions.length > 0 && (
               <FadeInSection delay={170} threshold={0.05} rootMargin="0px 0px 18% 0px">
