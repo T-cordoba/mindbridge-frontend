@@ -40,7 +40,7 @@ export default function JournalChatShell({ children }: JournalChatShellProps) {
     setRecentError('');
 
     journalApi.getSessions(1, 50)
-      .then(({ sessions }) => setRecentSessions([...sessions].sort(sortSessionsByActivity)))
+      .then(({ data }) => setRecentSessions([...data].sort(sortSessionsByActivity)))
       .catch((err) => setRecentError(err instanceof Error ? err.message : 'Error al cargar sesiones recientes'))
       .finally(() => setRecentLoading(false));
   }, [isSessionRoute]);

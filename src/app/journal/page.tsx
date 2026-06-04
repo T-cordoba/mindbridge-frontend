@@ -35,10 +35,10 @@ export default function JournalPage() {
     setError('');
     try {
       const data = await journalApi.getSessions(targetPage, PAGE_SIZE);
-      setSessions(data.sessions);
-      setTotalPages(data.totalPages);
-      setTotal(data.total);
-      setPage(data.page);
+      setSessions(data.data);
+      setTotalPages(data.meta.totalPages);
+      setTotal(data.meta.total);
+      setPage(data.meta.page);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al cargar sesiones');
     } finally {

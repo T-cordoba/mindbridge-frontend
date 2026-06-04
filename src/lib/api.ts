@@ -1,10 +1,10 @@
-import { getToken } from './auth';
+import { getToken, removeToken } from './auth';
 import type {
   User, Session, Message, Psychologist,
-  DashboardMetrics, SendMessageResult, SessionsPage,
+  DashboardMetrics, SendMessageResult, SessionsPage, UsersPage,
 } from '@/types';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api') + '/v1';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
@@ -16,9 +16,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
 
+  if (res.status === 401) {
+    removeToken();
+    if (typeof window !== 'undefined') window.location.href = '/login';
+    throw new Error('Sesión expirada. Por favor inicia sesión de nuevo.');
+  }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `HTTP ${res.status}`);
+    throw new Error((body as { error?: string }).error || `HTTP ${res.status}`);
   }
 
   if (res.status === 204) return undefined as T;
@@ -69,6 +75,7 @@ export const journalApi = {
       onReasoning?: (chunk: string) => void;
       onText: (chunk: string) => void;
       onDone: (result: SendMessageResult) => void;
+      onTitleUpdated?: (title: string) => void;
       onError: (message: string) => void;
     },
   ): AbortController => {
@@ -85,6 +92,11 @@ export const journalApi = {
       signal: controller.signal,
     })
       .then(async (res) => {
+        if (res.status === 401) {
+          removeToken();
+          window.location.href = '/login';
+          return;
+        }
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           callbacks.onError((body as { error?: string }).error || `HTTP ${res.status}`);
@@ -117,6 +129,7 @@ export const journalApi = {
                   if (currentEvent === 'reasoning') callbacks.onReasoning?.(data.chunk as string);
                   else if (currentEvent === 'text') callbacks.onText(data.chunk as string);
                   else if (currentEvent === 'done') callbacks.onDone(data as unknown as SendMessageResult);
+                  else if (currentEvent === 'title-updated') callbacks.onTitleUpdated?.(data.title as string);
                   else if (currentEvent === 'error') callbacks.onError(data.message as string);
                 } catch { /* malformed event */ }
               }
@@ -148,4 +161,11 @@ export const marketplaceApi = {
   getPsychologists: () => request<{ psychologists: Psychologist[] }>('/marketplace/psychologists'),
 
   getPsychologist: (id: string) => request<{ psychologist: Psychologist }>(`/marketplace/psychologists/${id}`),
+};
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+
+export const adminApi = {
+  getUsers: (page = 1, limit = 10) =>
+    request<UsersPage>(`/admin/users?page=${page}&limit=${limit}`),
 };

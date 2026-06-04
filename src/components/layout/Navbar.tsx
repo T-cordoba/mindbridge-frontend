@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Brain, LogOut, LayoutDashboard, MessageSquare, Users, Info, ChevronDown } from 'lucide-react';
+import { Brain, LogOut, LayoutDashboard, MessageSquare, Users, Info, ChevronDown, ShieldCheck } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/ui/Button';
@@ -27,7 +27,11 @@ function getUserInitial(user: { name: string | null; email: string }): string {
 export default function Navbar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const links = user ? privateLinks : publicLinks;
+  const links = user
+    ? user.role === 'admin'
+      ? [...privateLinks, { href: '/admin', label: 'Admin', icon: <ShieldCheck size={16} /> }]
+      : privateLinks
+    : publicLinks;
 
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

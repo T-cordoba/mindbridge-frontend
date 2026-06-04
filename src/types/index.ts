@@ -10,6 +10,7 @@ export interface User {
   email: string;
   name: string | null;
   disclaimerAccepted: boolean;
+  role: string;
   createdAt: string;
 }
 
@@ -59,21 +60,37 @@ export interface EmotionMetric {
 export interface AlertTrendPoint {
   date: string;
   maxAlert: number;
+  avgAlert: number;
+}
+
+export interface WellbeingPoint {
+  date: string;
+  score: number;
 }
 
 export interface DashboardMetrics {
   emotions: EmotionMetric[];
   alertTrend: AlertTrendPoint[];
+  wellbeingTrend: WellbeingPoint[];
   totalSessions: number;
   analyzedMessages: number;
 }
 
-export interface SessionsPage {
-  sessions: Session[];
+export interface PaginatedMeta {
   total: number;
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface SessionsPage {
+  data: Session[];
+  meta: PaginatedMeta;
+}
+
+export interface UsersPage {
+  data: User[];
+  meta: PaginatedMeta;
 }
 
 export interface SendMessageResult {

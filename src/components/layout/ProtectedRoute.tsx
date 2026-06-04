@@ -6,13 +6,20 @@ import { useAuth } from '@/context/AuthContext';
 import Spinner from '@/components/ui/Spinner';
 import { ReactNode } from 'react';
 
-export default function ProtectedRoute({ children }: { children: ReactNode }) {
+interface Props {
+  children: ReactNode;
+  requiredRole?: string;
+}
+
+export default function ProtectedRoute({ children, requiredRole }: Props) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [user, loading, router]);
+    if (loading) return;
+    if (!user) { router.push('/login'); return; }
+    if (requiredRole && user.role !== requiredRole) router.push('/');
+  }, [user, loading, router, requiredRole]);
 
   if (loading) {
     return (
@@ -23,5 +30,6 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   }
 
   if (!user) return null;
+  if (requiredRole && user.role !== requiredRole) return null;
   return <>{children}</>;
 }
