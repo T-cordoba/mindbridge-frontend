@@ -12,6 +12,8 @@ interface AuthContextValue {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   deleteAccount: () => Promise<void>;
+  updateProfile: (data: { name?: string; email?: string }) => Promise<void>;
+  uploadAvatar: (file: File) => Promise<void>;
 }
 
 interface RegisterData {
@@ -60,8 +62,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const updateProfile = async (data: { name?: string; email?: string }) => {
+    const { user: updated } = await authApi.updateProfile(data);
+    setUser(updated);
+  };
+
+  const uploadAvatar = async (file: File) => {
+    const { user: updated } = await authApi.uploadAvatar(file);
+    setUser(updated);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, deleteAccount }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, deleteAccount, updateProfile, uploadAvatar }}>
       {children}
     </AuthContext.Provider>
   );

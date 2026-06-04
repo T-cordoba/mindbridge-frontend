@@ -11,6 +11,7 @@ export interface User {
   name: string | null;
   disclaimerAccepted: boolean;
   role: string;
+  avatarUrl: string | null;
   createdAt: string;
 }
 

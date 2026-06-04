@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Brain, LogOut, LayoutDashboard, MessageSquare, Users, Info, ChevronDown, ShieldCheck } from 'lucide-react';
+import Image from 'next/image';
+import { Brain, LogOut, LayoutDashboard, MessageSquare, Users, Info, ChevronDown, ShieldCheck, UserCircle } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/ui/Button';
@@ -83,9 +84,20 @@ export default function Navbar() {
                 aria-haspopup="true"
                 aria-expanded={open}
               >
-                <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm select-none">
-                  {getUserInitial(user)}
-                </span>
+                {user.avatarUrl ? (
+                  <Image
+                    src={user.avatarUrl}
+                    alt="avatar"
+                    width={32}
+                    height={32}
+                    className="w-8 h-8 rounded-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm select-none">
+                    {getUserInitial(user)}
+                  </span>
+                )}
                 <ChevronDown size={14} className={['transition-transform duration-200', open ? 'rotate-180' : ''].join(' ')} />
               </button>
 
@@ -95,6 +107,14 @@ export default function Navbar() {
                     <p className="font-semibold text-text-primary text-sm truncate">{user.name ?? 'Usuario'}</p>
                     <p className="text-xs text-text-muted truncate">{user.email}</p>
                   </div>
+                  <Link
+                    href="/profile"
+                    onClick={() => setOpen(false)}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors"
+                  >
+                    <UserCircle size={15} />
+                    Mi Perfil
+                  </Link>
                   <button
                     onClick={() => { setOpen(false); logout(); }}
                     className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-text-secondary hover:text-danger hover:bg-danger-bg transition-colors"

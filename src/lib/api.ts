@@ -43,6 +43,24 @@ export const authApi = {
   me: () => request<{ user: User }>('/auth/me'),
 
   deleteAccount: () => request<void>('/auth/account', { method: 'DELETE' }),
+
+  updateProfile: (data: { name?: string; email?: string }) =>
+    request<{ user: User }>('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+
+  uploadAvatar: (file: File) => {
+    const token = getToken();
+    const form = new FormData();
+    form.append('avatar', file);
+    return fetch(`${BASE}/auth/profile/avatar`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    }).then(async (res) => {
+      if (res.status === 401) { removeToken(); window.location.href = '/login'; throw new Error(''); }
+      if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error((b as { error?: string }).error || `HTTP ${res.status}`); }
+      return res.json() as Promise<{ user: User; avatarUrl: string }>;
+    });
+  },
 };
 
 // ─── Journal ──────────────────────────────────────────────────────────────────
