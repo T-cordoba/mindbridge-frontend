@@ -1,37 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { BarChart2, MessageSquare, AlertTriangle, TrendingUp, Heart } from 'lucide-react';
+import { BarChart2, MessageSquare, TrendingUp, Heart } from 'lucide-react';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import StatsCard from '@/components/dashboard/StatsCard';
 import EmotionChart from '@/components/dashboard/EmotionChart';
 import MoodTimeline from '@/components/dashboard/MoodTimeline';
 import WellbeingChart from '@/components/dashboard/WellbeingChart';
-import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import Spinner from '@/components/ui/Spinner';
 import Alert from '@/components/ui/Alert';
 import FadeInSection from '@/components/ui/FadeInSection';
 import { getEmotionLabel, getEmotionColor } from '@/lib/emotions';
-import { dashboardApi } from '@/lib/api';
-import type { DashboardMetrics } from '@/types';
+import { useDashboard } from '@/hooks/useDashboard';
 
 export default function DashboardPage() {
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [days, setDays] = useState(30);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    setLoading(true);
-    dashboardApi.getMetrics(days)
-      .then(setMetrics)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [days]);
-
-  const topEmotion = metrics?.emotions[0];
-  const latestWellbeing = metrics?.wellbeingTrend.at(-1)?.score ?? null;
+  const { metrics, days, setDays, loading, error, topEmotion, latestWellbeing } = useDashboard();
 
   return (
     <ProtectedRoute>
@@ -122,10 +105,7 @@ export default function DashboardPage() {
                   <div className="flex flex-col gap-3">
                     {metrics.emotions.map((e) => (
                       <div key={e.emotion} className="flex items-center gap-3">
-                        <span
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ background: getEmotionColor(e.emotion) }}
-                        />
+                        <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: getEmotionColor(e.emotion) }} />
                         <span className="text-sm text-text-primary min-w-[120px]">{getEmotionLabel(e.emotion)}</span>
                         <div className="flex-1 bg-surface-elevated rounded-full h-2 overflow-hidden">
                           <div
@@ -136,9 +116,7 @@ export default function DashboardPage() {
                             }}
                           />
                         </div>
-                        <span className="text-xs text-text-muted w-16 text-right">
-                          {e.occurrences}× · {e.avgIntensity}/10
-                        </span>
+                        <span className="text-xs text-text-muted w-16 text-right">{e.occurrences}× · {e.avgIntensity}/10</span>
                       </div>
                     ))}
                   </div>

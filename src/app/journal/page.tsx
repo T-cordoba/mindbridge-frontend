@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
@@ -11,89 +11,57 @@ import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Alert from '@/components/ui/Alert';
 import FadeInSection from '@/components/ui/FadeInSection';
-import { journalApi } from '@/lib/api';
+import { useJournal } from '@/hooks/useJournal';
 import type { Session } from '@/types';
-
-const PAGE_SIZE = 6;
 
 export default function JournalPage() {
   const router = useRouter();
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
+  const {
+    sessions, loading, creating, error, page, totalPages, total,
+    fetchSessions, createSession, deleteSession, updateSessionTitle,
+  } = useJournal();
+
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [updatingTitle, setUpdatingTitle] = useState(false);
   const [deletingSession, setDeletingSession] = useState<Session | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState('');
-  const [editingSession, setEditingSession] = useState<Session | null>(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [localError, setLocalError] = useState('');
 
-  const fetchSessions = useCallback(async (targetPage: number) => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await journalApi.getSessions(targetPage, PAGE_SIZE);
-      setSessions(data.data);
-      setTotalPages(data.meta.totalPages);
-      setTotal(data.meta.total);
-      setPage(data.meta.page);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al cargar sesiones');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  useEffect(() => { fetchSessions(1); }, [fetchSessions]);
 
-  useEffect(() => {
-    fetchSessions(1);
-  }, [fetchSessions]);
-
-  const createSession = async () => {
-    setCreating(true);
-    try {
-      const { session } = await journalApi.createSession();
-      router.push(`/journal/${session.id}`);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al crear sesión');
-      setCreating(false);
-    }
+  const handleCreate = async () => {
+    const id = await createSession();
+    if (id) router.push(`/journal/${id}`);
   };
 
-  const requestDeleteSession = (id: string) => {
-    const sessionToDelete = sessions.find((s) => s.id === id);
-    if (sessionToDelete) setDeletingSession(sessionToDelete);
+  const requestDelete = (id: string) => {
+    const s = sessions.find((s) => s.id === id);
+    if (s) setDeletingSession(s);
   };
 
-  const confirmDeleteSession = async () => {
+  const confirmDelete = async () => {
     if (!deletingSession) return;
     setDeleting(true);
-    setError('');
+    setLocalError('');
     try {
-      await journalApi.deleteSession(deletingSession.id);
+      await deleteSession(deletingSession.id, page);
       setDeletingSession(null);
-      const newTotal = total - 1;
-      const newTotalPages = Math.max(1, Math.ceil(newTotal / PAGE_SIZE));
-      const targetPage = page > newTotalPages ? newTotalPages : page;
-      await fetchSessions(targetPage);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al eliminar');
+      setLocalError(err instanceof Error ? err.message : 'Error al eliminar');
     } finally {
       setDeleting(false);
     }
   };
 
-  const updateSessionTitle = async (title: string) => {
+  const handleUpdateTitle = async (title: string) => {
     if (!editingSession) return;
     setUpdatingTitle(true);
-    setError('');
+    setLocalError('');
     try {
-      const { session: updatedSession } = await journalApi.updateSessionTitle(editingSession.id, title);
-      setSessions((prev) => prev.map((s) => s.id === updatedSession.id ? updatedSession : s));
+      await updateSessionTitle(editingSession.id, title);
       setEditingSession(null);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar el titulo');
+      setLocalError(err instanceof Error ? err.message : 'Error al actualizar el titulo');
     } finally {
       setUpdatingTitle(false);
     }
@@ -116,6 +84,7 @@ export default function JournalPage() {
   };
 
   const isEmpty = !loading && sessions.length === 0 && total === 0;
+  const displayError = error || localError;
 
   return (
     <ProtectedRoute>
@@ -126,14 +95,14 @@ export default function JournalPage() {
               <h1 className="text-2xl font-bold">Mi Diario</h1>
               <p className="text-text-secondary mt-1">Tus sesiones de reflexión personal</p>
             </div>
-            <Button onClick={createSession} loading={creating} className="gap-2">
+            <Button onClick={handleCreate} loading={creating} className="gap-2">
               <Plus size={18} />
               Nueva sesión
             </Button>
           </div>
         </FadeInSection>
 
-        {error && <Alert variant="danger" className="mb-6">{error}</Alert>}
+        {displayError && <Alert variant="danger" className="mb-6">{displayError}</Alert>}
 
         {loading ? (
           <div className="flex justify-center py-16"><Spinner size="lg" /></div>
@@ -147,7 +116,7 @@ export default function JournalPage() {
               <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto">
                 Cada sesión es un espacio privado para explorar tus pensamientos con la guía de la IA.
               </p>
-              <Button onClick={createSession} loading={creating} className="gap-2">
+              <Button onClick={handleCreate} loading={creating} className="gap-2">
                 <Plus size={18} /> Crear primera sesión
               </Button>
             </div>
@@ -159,7 +128,7 @@ export default function JournalPage() {
                 <SessionCard
                   key={session.id}
                   session={session}
-                  onDelete={requestDeleteSession}
+                  onDelete={requestDelete}
                   onEdit={setEditingSession}
                 />
               ))}
@@ -170,7 +139,6 @@ export default function JournalPage() {
                 <p className="text-xs text-text-muted">
                   {total} sesión{total !== 1 ? 'es' : ''} · página {page} de {totalPages}
                 </p>
-
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => goToPage(page - 1)}
@@ -180,7 +148,6 @@ export default function JournalPage() {
                   >
                     <ChevronLeft size={16} />
                   </button>
-
                   {pageNumbers().map((p, i) =>
                     p === '…' ? (
                       <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-text-muted text-sm">…</span>
@@ -190,9 +157,7 @@ export default function JournalPage() {
                         onClick={() => goToPage(p as number)}
                         className={[
                           'w-8 h-8 rounded-lg text-sm font-medium transition-colors',
-                          p === page
-                            ? 'bg-primary text-white'
-                            : 'text-text-secondary hover:text-primary hover:bg-primary-subtle',
+                          p === page ? 'bg-primary text-white' : 'text-text-secondary hover:text-primary hover:bg-primary-subtle',
                         ].join(' ')}
                         aria-current={p === page ? 'page' : undefined}
                       >
@@ -200,7 +165,6 @@ export default function JournalPage() {
                       </button>
                     )
                   )}
-
                   <button
                     onClick={() => goToPage(page + 1)}
                     disabled={page === totalPages}
@@ -220,15 +184,14 @@ export default function JournalPage() {
           initialTitle={editingSession?.title ?? ''}
           loading={updatingTitle}
           onClose={() => { if (updatingTitle) return; setEditingSession(null); }}
-          onSave={updateSessionTitle}
+          onSave={handleUpdateTitle}
         />
-
         <DeleteSessionConfirmModal
           open={!!deletingSession}
           sessionTitle={deletingSession?.title ?? ''}
           loading={deleting}
           onClose={() => { if (deleting) return; setDeletingSession(null); }}
-          onConfirm={confirmDeleteSession}
+          onConfirm={confirmDelete}
         />
       </div>
     </ProtectedRoute>
